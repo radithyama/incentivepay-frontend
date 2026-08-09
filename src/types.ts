@@ -3,6 +3,19 @@ export type AppliesTo = "EMPLOYEE" | "PARTNER" | "BOTH";
 export type ParticipantType = "EMPLOYEE" | "PARTNER";
 export type DisbursementStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "DISBURSED" | "FAILED";
 export type ImportRowOutcome = "IMPORTED" | "SKIPPED_DUPLICATE" | "FAILED";
+export type Role = "incentive-admin" | "approver" | "finance-ops" | "viewer";
+
+export const ALL_ROLES: Role[] = ["incentive-admin", "approver", "finance-ops", "viewer"];
+
+export interface PendingRegistration {
+  id: string;
+  username: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  requestedRole: Role | null;
+  createdTimestamp: number | null;
+}
 
 export interface Tier {
   minAmount: string;

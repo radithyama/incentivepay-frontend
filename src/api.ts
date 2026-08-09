@@ -34,12 +34,20 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(baseUrl: string, path: string, method: string, body?: unknown): Promise<T> {
-  await keycloak.updateToken(30).catch(() => keycloak.login());
+async function request<T>(
+  baseUrl: string,
+  path: string,
+  method: string,
+  body: unknown,
+  requiresAuth: boolean,
+): Promise<T> {
+  const headers: Record<string, string> = {};
 
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${keycloak.token}`,
-  };
+  if (requiresAuth) {
+    await keycloak.updateToken(30).catch(() => keycloak.login());
+    headers.Authorization = `Bearer ${keycloak.token}`;
+  }
+
   const bodyString = body !== undefined ? JSON.stringify(body) : "";
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";
@@ -64,16 +72,23 @@ async function request<T>(baseUrl: string, path: string, method: string, body?: 
   if (response.status === 204) {
     return undefined as T;
   }
-  return (await response.json()) as T;
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>(API_BASE_URL, path, "GET"),
-  post: <T>(path: string, body?: unknown) => request<T>(API_BASE_URL, path, "POST", body),
+  get: <T>(path: string) => request<T>(API_BASE_URL, path, "GET", undefined, true),
+  post: <T>(path: string, body?: unknown) => request<T>(API_BASE_URL, path, "POST", body, true),
+  delete: <T>(path: string) => request<T>(API_BASE_URL, path, "DELETE", undefined, true),
+};
+
+// Unauthenticated - only for the pre-login registration form.
+export const publicApi = {
+  post: <T>(path: string, body?: unknown) => request<T>(API_BASE_URL, path, "POST", body, false),
 };
 
 export const ledgerApi = {
-  get: <T>(path: string) => request<T>(LEDGER_BASE_URL, path, "GET"),
+  get: <T>(path: string) => request<T>(LEDGER_BASE_URL, path, "GET", undefined, true),
 };
 
 export async function uploadCsv<T>(path: string, file: File): Promise<T> {

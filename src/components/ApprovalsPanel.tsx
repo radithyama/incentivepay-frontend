@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../api";
 import { hasRole } from "../keycloak";
+import { Button } from "../ui/Button";
+import { Input } from "../ui/Field";
+import { ErrorAlert, EmptyState } from "../ui/Alert";
+import { Badge } from "../ui/Badge";
 import type { Disbursement } from "../types";
 
 export function ApprovalsPanel() {
@@ -60,53 +64,65 @@ export function ApprovalsPanel() {
   }
 
   return (
-    <div className="panel">
-      <h2>Approvals queue</h2>
-      <p className="hint">
-        Disbursements above the auto-approve threshold land here. Try this as a <code>viewer</code> token to see
-        the RBAC story: the buttons stay visible, but the server returns 403.
-      </p>
-      {error && <p className="error">{error}</p>}
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-ip-text">Approvals queue</h1>
+          <p className="mt-1 text-sm text-ip-text-muted">
+            Disbursements above the auto-approve threshold land here. Try this as a{" "}
+            <code className="rounded bg-slate-100 px-1 py-0.5 text-xs">viewer</code> to see the RBAC story - the
+            buttons stay visible, the server returns 403.
+          </p>
+        </div>
+        {disbursements.length > 0 && <Badge tone="warning">{disbursements.length} pending</Badge>}
+      </div>
+
+      {error && <ErrorAlert message={error} />}
+
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-sm text-ip-text-muted">Loading...</p>
       ) : disbursements.length === 0 ? (
-        <p>Nothing pending.</p>
+        <EmptyState message="Nothing pending." />
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Participant</th>
-              <th>Amount</th>
-              <th>Created</th>
-              <th>Reject reason</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {disbursements.map((d) => (
-              <tr key={d.id}>
-                <td>{d.participantExternalRef}</td>
-                <td>{d.computedAmount}</td>
-                <td>{new Date(d.createdAt).toLocaleString()}</td>
-                <td>
-                  <input
-                    placeholder="reason"
-                    value={rejectReason[d.id] ?? ""}
-                    onChange={(e) => setRejectReason({ ...rejectReason, [d.id]: e.target.value })}
-                  />
-                </td>
-                <td>
-                  <button disabled={!canApprove || busyId === d.id} onClick={() => approve(d.id)}>
-                    Approve
-                  </button>
-                  <button disabled={!canApprove || busyId === d.id} onClick={() => reject(d.id)}>
-                    Reject
-                  </button>
-                </td>
+        <div className="overflow-x-auto rounded-xl border border-ip-border bg-ip-surface">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-ip-border text-left text-xs font-semibold uppercase tracking-wide text-ip-text-muted">
+                <th className="px-4 py-3">Participant</th>
+                <th className="px-4 py-3">Amount</th>
+                <th className="px-4 py-3">Created</th>
+                <th className="px-4 py-3">Reject reason</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {disbursements.map((d) => (
+                <tr key={d.id} className="border-b border-ip-border last:border-0 hover:bg-slate-50">
+                  <td className="px-4 py-3 font-medium text-ip-text">{d.participantExternalRef}</td>
+                  <td className="px-4 py-3">{d.computedAmount}</td>
+                  <td className="px-4 py-3 text-ip-text-muted">{new Date(d.createdAt).toLocaleString()}</td>
+                  <td className="px-4 py-3">
+                    <Input
+                      placeholder="reason"
+                      value={rejectReason[d.id] ?? ""}
+                      onChange={(e) => setRejectReason({ ...rejectReason, [d.id]: e.target.value })}
+                    />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <Button disabled={!canApprove || busyId === d.id} onClick={() => approve(d.id)}>
+                        Approve
+                      </Button>
+                      <Button variant="danger" disabled={!canApprove || busyId === d.id} onClick={() => reject(d.id)}>
+                        Reject
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

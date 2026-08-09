@@ -1,6 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, ApiError } from "../api";
 import { hasRole } from "../keycloak";
+import { Card } from "../ui/Card";
+import { Button } from "../ui/Button";
+import { Field, Input, Select } from "../ui/Field";
+import { ErrorAlert, EmptyState } from "../ui/Alert";
+import { Badge } from "../ui/Badge";
 import type { AppliesTo, Rule, RuleType, Tier } from "../types";
 
 const emptyTier = (): Tier => ({ minAmount: "0", maxAmount: "", rate: "0.05" });
@@ -58,109 +63,116 @@ export function RulesPanel() {
   }
 
   return (
-    <div className="panel">
-      <h2>Incentive Rules</h2>
-      {error && <p className="error">{error}</p>}
+    <div className="flex flex-col gap-4">
+      <h1 className="text-xl font-semibold text-ip-text">Incentive rules</h1>
+      {error && <ErrorAlert message={error} />}
 
       {canManage && (
-        <form onSubmit={handleSubmit} className="card">
-          <h3>New rule</h3>
-          <label>
-            Name
-            <input value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-          <label>
-            Type
-            <select value={type} onChange={(e) => setType(e.target.value as RuleType)}>
-              <option value="FLAT">FLAT</option>
-              <option value="PERCENTAGE">PERCENTAGE</option>
-              <option value="TIERED">TIERED</option>
-            </select>
-          </label>
-          <label>
-            Applies to
-            <select value={appliesTo} onChange={(e) => setAppliesTo(e.target.value as AppliesTo)}>
-              <option value="BOTH">BOTH</option>
-              <option value="EMPLOYEE">EMPLOYEE</option>
-              <option value="PARTNER">PARTNER</option>
-            </select>
-          </label>
-          <label>
-            Effective from
-            <input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} required />
-          </label>
+        <Card>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <h2 className="font-semibold text-ip-text">New rule</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Name">
+                <Input value={name} onChange={(e) => setName(e.target.value)} required />
+              </Field>
+              <Field label="Type">
+                <Select value={type} onChange={(e) => setType(e.target.value as RuleType)}>
+                  <option value="FLAT">FLAT</option>
+                  <option value="PERCENTAGE">PERCENTAGE</option>
+                  <option value="TIERED">TIERED</option>
+                </Select>
+              </Field>
+              <Field label="Applies to">
+                <Select value={appliesTo} onChange={(e) => setAppliesTo(e.target.value as AppliesTo)}>
+                  <option value="BOTH">BOTH</option>
+                  <option value="EMPLOYEE">EMPLOYEE</option>
+                  <option value="PARTNER">PARTNER</option>
+                </Select>
+              </Field>
+              <Field label="Effective from">
+                <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} required />
+              </Field>
 
-          {type === "FLAT" && (
-            <label>
-              Flat amount
-              <input value={flatAmount} onChange={(e) => setFlatAmount(e.target.value)} required />
-            </label>
-          )}
-          {type === "PERCENTAGE" && (
-            <label>
-              Percentage (0.05 = 5%)
-              <input value={percentage} onChange={(e) => setPercentage(e.target.value)} required />
-            </label>
-          )}
-          {type === "TIERED" && (
-            <div>
-              <p>Tiers (marginal, like a tax bracket)</p>
-              {tiers.map((tier, i) => (
-                <div key={i} className="tier-row">
-                  <input
-                    placeholder="min"
-                    value={tier.minAmount}
-                    onChange={(e) => setTiers(tiers.map((t, j) => (j === i ? { ...t, minAmount: e.target.value } : t)))}
-                  />
-                  <input
-                    placeholder="max (blank = unbounded)"
-                    value={tier.maxAmount ?? ""}
-                    onChange={(e) => setTiers(tiers.map((t, j) => (j === i ? { ...t, maxAmount: e.target.value || null } : t)))}
-                  />
-                  <input
-                    placeholder="rate"
-                    value={tier.rate}
-                    onChange={(e) => setTiers(tiers.map((t, j) => (j === i ? { ...t, rate: e.target.value } : t)))}
-                  />
-                </div>
-              ))}
-              <button type="button" onClick={() => setTiers([...tiers, emptyTier()])}>
-                + Add tier
-              </button>
+              {type === "FLAT" && (
+                <Field label="Flat amount">
+                  <Input value={flatAmount} onChange={(e) => setFlatAmount(e.target.value)} required />
+                </Field>
+              )}
+              {type === "PERCENTAGE" && (
+                <Field label="Percentage (0.05 = 5%)">
+                  <Input value={percentage} onChange={(e) => setPercentage(e.target.value)} required />
+                </Field>
+              )}
             </div>
-          )}
 
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Creating..." : "Create rule"}
-          </button>
-        </form>
+            {type === "TIERED" && (
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ip-text-muted">
+                  Tiers (marginal, like a tax bracket)
+                </p>
+                {tiers.map((tier, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Input
+                      placeholder="min"
+                      value={tier.minAmount}
+                      onChange={(e) => setTiers(tiers.map((t, j) => (j === i ? { ...t, minAmount: e.target.value } : t)))}
+                    />
+                    <Input
+                      placeholder="max (blank = unbounded)"
+                      value={tier.maxAmount ?? ""}
+                      onChange={(e) => setTiers(tiers.map((t, j) => (j === i ? { ...t, maxAmount: e.target.value || null } : t)))}
+                    />
+                    <Input
+                      placeholder="rate"
+                      value={tier.rate}
+                      onChange={(e) => setTiers(tiers.map((t, j) => (j === i ? { ...t, rate: e.target.value } : t)))}
+                    />
+                  </div>
+                ))}
+                <Button type="button" variant="secondary" className="self-start" onClick={() => setTiers([...tiers, emptyTier()])}>
+                  + Add tier
+                </Button>
+              </div>
+            )}
+
+            <Button type="submit" disabled={submitting} className="self-start">
+              {submitting ? "Creating..." : "Create rule"}
+            </Button>
+          </form>
+        </Card>
       )}
 
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-sm text-ip-text-muted">Loading...</p>
+      ) : rules.length === 0 ? (
+        <EmptyState message="No rules yet." />
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Applies to</th>
-              <th>Effective from</th>
-              <th>Active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rules.map((r) => (
-              <tr key={r.id}>
-                <td>{r.name}</td>
-                <td>{r.type}</td>
-                <td>{r.appliesTo}</td>
-                <td>{r.effectiveFrom}</td>
-                <td>{r.active ? "yes" : "no"}</td>
+        <div className="overflow-x-auto rounded-xl border border-ip-border bg-ip-surface">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-ip-border text-left text-xs font-semibold uppercase tracking-wide text-ip-text-muted">
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Applies to</th>
+                <th className="px-4 py-3">Effective from</th>
+                <th className="px-4 py-3">Active</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rules.map((r) => (
+                <tr key={r.id} className="border-b border-ip-border last:border-0 hover:bg-slate-50">
+                  <td className="px-4 py-3 font-medium text-ip-text">{r.name}</td>
+                  <td className="px-4 py-3">{r.type}</td>
+                  <td className="px-4 py-3">{r.appliesTo}</td>
+                  <td className="px-4 py-3 text-ip-text-muted">{r.effectiveFrom}</td>
+                  <td className="px-4 py-3">
+                    <Badge tone={r.active ? "success" : "neutral"}>{r.active ? "active" : "inactive"}</Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
