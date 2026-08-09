@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ledgerApi, ApiError } from "../api";
+import { ledgerApi, friendlyErrorMessage } from "../api";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Field, Input } from "../ui/Field";
@@ -20,7 +20,7 @@ export function LedgerPanel() {
     try {
       setLedger(await ledgerApi.get<ParticipantLedger>(`/v1/ledger/${encodeURIComponent(participantRef)}`));
     } catch (e) {
-      setError(e instanceof ApiError ? `${e.status}: ${e.message}` : "Failed to load ledger");
+      setError(friendlyErrorMessage(e, "Failed to load that ledger."));
       setLedger(null);
     } finally {
       setLoading(false);

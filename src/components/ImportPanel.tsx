@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { api, ApiError, uploadCsv } from "../api";
+import { api, friendlyErrorMessage, uploadCsv } from "../api";
 import { hasRole } from "../keycloak";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
-import { ErrorAlert, EmptyState } from "../ui/Alert";
+import { EmptyState } from "../ui/Alert";
+import { useToast } from "../ui/Toast";
 import type { ImportJobSummary, ImportRowOutcome } from "../types";
 
 const OUTCOME_TONE: Record<ImportRowOutcome, "success" | "warning" | "danger"> = {
@@ -16,9 +17,9 @@ const OUTCOME_TONE: Record<ImportRowOutcome, "success" | "warning" | "danger"> =
 export function ImportPanel() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<ImportJobSummary | null>(null);
   const [recent, setRecent] = useState<ImportJobSummary[]>([]);
+  const toast = useToast();
 
   const canImport = hasRole("incentive-admin");
 
@@ -37,13 +38,13 @@ export function ImportPanel() {
   async function handleUpload() {
     if (!file) return;
     setUploading(true);
-    setError(null);
     try {
       const summary = await uploadCsv<ImportJobSummary>("/v1/imports", file);
       setCurrent(summary);
+      toast.success(`Import complete: ${summary.importedCount} imported, ${summary.failedCount} failed.`);
       await loadRecent();
     } catch (e) {
-      setError(e instanceof ApiError ? `${e.status}: ${e.message}` : "Import failed");
+      toast.error(friendlyErrorMessage(e, "The import failed to run."));
     } finally {
       setUploading(false);
     }
@@ -75,7 +76,6 @@ export function ImportPanel() {
           </Button>
         </Card>
       )}
-      {error && <ErrorAlert message={error} />}
 
       {current && (
         <Card className="flex flex-col gap-3">

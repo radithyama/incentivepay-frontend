@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { api, ApiError } from "../api";
+import { api, friendlyErrorMessage } from "../api";
 import { hasRole } from "../keycloak";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Field";
 import { ErrorAlert, EmptyState } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
+import { useToast } from "../ui/Toast";
 import type { Disbursement } from "../types";
 
 export function ApprovalsPanel() {
@@ -13,6 +14,7 @@ export function ApprovalsPanel() {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState<Record<string, string>>({});
+  const toast = useToast();
 
   const canApprove = hasRole("approver");
 
@@ -22,7 +24,7 @@ export function ApprovalsPanel() {
     try {
       setDisbursements(await api.get<Disbursement[]>("/v1/disbursements?status=PENDING_APPROVAL"));
     } catch (e) {
-      setError(e instanceof ApiError ? `${e.status}: ${e.message}` : "Failed to load approvals");
+      setError(friendlyErrorMessage(e, "Failed to load approvals."));
     } finally {
       setLoading(false);
     }
@@ -34,12 +36,12 @@ export function ApprovalsPanel() {
 
   async function approve(id: string) {
     setBusyId(id);
-    setError(null);
     try {
       await api.post(`/v1/disbursements/${id}/approve`);
+      toast.success("Disbursement approved.");
       await load();
     } catch (e) {
-      setError(e instanceof ApiError ? `${e.status}: ${e.message}` : "Approve failed");
+      toast.error(friendlyErrorMessage(e, "Couldn't approve this disbursement."));
     } finally {
       setBusyId(null);
     }
@@ -48,16 +50,16 @@ export function ApprovalsPanel() {
   async function reject(id: string) {
     const reason = rejectReason[id];
     if (!reason || !reason.trim()) {
-      setError("A rejection reason is required");
+      toast.error("A rejection reason is required.");
       return;
     }
     setBusyId(id);
-    setError(null);
     try {
       await api.post(`/v1/disbursements/${id}/reject`, { reason });
+      toast.success("Disbursement rejected.");
       await load();
     } catch (e) {
-      setError(e instanceof ApiError ? `${e.status}: ${e.message}` : "Reject failed");
+      toast.error(friendlyErrorMessage(e, "Couldn't reject this disbursement."));
     } finally {
       setBusyId(null);
     }

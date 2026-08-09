@@ -34,6 +34,51 @@ export class ApiError extends Error {
   }
 }
 
+// Backend errors come back as either a GlobalExceptionHandler JSON body
+// ({ message: "..." }) or, for validation failures Spring's default error
+// controller handles, a plain-text/HTML page. Only trust the parsed message
+// when it's short and doesn't look like markup or a stack trace.
+function extractMessage(status: number, raw: string): string {
+  try {
+    const parsed = JSON.parse(raw) as { message?: unknown };
+    if (typeof parsed.message === "string" && parsed.message.trim()) {
+      return parsed.message;
+    }
+  } catch {
+    // Not JSON - fall through to the raw text/statusText.
+  }
+  return raw || `Request failed with status ${status}`;
+}
+
+function looksUserFriendly(message: string): boolean {
+  return message.length > 0 && message.length < 160 && !/[{}<>]/.test(message);
+}
+
+/** Maps an ApiError (or unknown thrown value) to a message safe to show a non-technical user. */
+export function friendlyErrorMessage(e: unknown, fallback = "Something went wrong. Please try again."): string {
+  if (!(e instanceof ApiError)) return fallback;
+
+  switch (e.status) {
+    case 400:
+    case 422:
+      return looksUserFriendly(e.message) ? e.message : "Please check the form and try again.";
+    case 401:
+      return "Your session has expired. Please log in again.";
+    case 403:
+      return "You don't have permission to do that.";
+    case 404:
+      return looksUserFriendly(e.message) ? e.message : "We couldn't find what you were looking for.";
+    case 409:
+      return looksUserFriendly(e.message) ? e.message : "That conflicts with existing data.";
+    case 502:
+    case 503:
+    case 504:
+      return "One of our services is temporarily unavailable. Please try again shortly.";
+    default:
+      return e.status >= 500 ? "Something went wrong on our end. Please try again shortly." : fallback;
+  }
+}
+
 async function request<T>(
   baseUrl: string,
   path: string,
@@ -67,7 +112,7 @@ async function request<T>(
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new ApiError(response.status, text || response.statusText);
+    throw new ApiError(response.status, extractMessage(response.status, text || response.statusText));
   }
   if (response.status === 204) {
     return undefined as T;
@@ -107,7 +152,7 @@ export async function uploadCsv<T>(path: string, file: File): Promise<T> {
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new ApiError(response.status, text || response.statusText);
+    throw new ApiError(response.status, extractMessage(response.status, text || response.statusText));
   }
   return (await response.json()) as T;
 }

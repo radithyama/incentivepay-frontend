@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { api, ApiError } from "../api";
+import { api, friendlyErrorMessage } from "../api";
 import { hasRole } from "../keycloak";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Field, Input, Select } from "../ui/Field";
 import { ErrorAlert, EmptyState } from "../ui/Alert";
 import { Badge } from "../ui/Badge";
+import { useToast } from "../ui/Toast";
 import type { AppliesTo, Rule, RuleType, Tier } from "../types";
 
 const emptyTier = (): Tier => ({ minAmount: "0", maxAmount: "", rate: "0.05" });
@@ -23,6 +24,7 @@ export function RulesPanel() {
   const [tiers, setTiers] = useState<Tier[]>([emptyTier()]);
   const [effectiveFrom, setEffectiveFrom] = useState(new Date().toISOString().slice(0, 10));
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
 
   const canManage = hasRole("incentive-admin");
 
@@ -32,7 +34,7 @@ export function RulesPanel() {
     try {
       setRules(await api.get<Rule[]>("/v1/rules"));
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load rules");
+      setError(friendlyErrorMessage(e, "Failed to load rules."));
     } finally {
       setLoading(false);
     }
@@ -54,9 +56,10 @@ export function RulesPanel() {
 
       await api.post("/v1/rules", payload);
       setName("");
+      toast.success("Rule created.");
       await load();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to create rule");
+      toast.error(friendlyErrorMessage(e, "Couldn't create that rule."));
     } finally {
       setSubmitting(false);
     }

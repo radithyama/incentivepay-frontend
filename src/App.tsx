@@ -6,8 +6,10 @@ import { ApprovalsPanel } from "./components/ApprovalsPanel";
 import { ImportPanel } from "./components/ImportPanel";
 import { LedgerPanel } from "./components/LedgerPanel";
 import { PendingApprovalsPanel } from "./components/PendingApprovalsPanel";
+import { HowItWorks } from "./components/HowItWorks";
+import { Logo } from "./ui/Logo";
 
-type Tab = "approvals" | "import" | "rules" | "ledger" | "pending";
+type Tab = "approvals" | "import" | "rules" | "ledger" | "pending" | "how";
 
 interface NavItem {
   id: Tab;
@@ -22,12 +24,14 @@ const NAV_ITEMS: NavItem[] = [
   { id: "rules", label: "Rules", icon: "⚙" },
   { id: "ledger", label: "Ledger", icon: "▤" },
   { id: "pending", label: "Pending approvals", icon: "◷", adminOnly: true },
+  { id: "how", label: "How it works", icon: "?" },
 ];
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState<Tab>("approvals");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     keycloak
@@ -53,20 +57,37 @@ export default function App() {
   const isAdmin = hasRole("incentive-admin");
   const visibleItems = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
 
+  function selectTab(id: Tab) {
+    setTab(id);
+    setMenuOpen(false);
+  }
+
   return (
     <div className="flex min-h-screen bg-ip-bg">
-      <aside className="flex w-60 flex-col border-r border-ip-border bg-ip-surface">
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-slate-900/40 md:hidden"
+          onClick={() => setMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-ip-border
+          bg-ip-surface transition-transform duration-200 md:static md:w-60 md:translate-x-0 ${
+            menuOpen ? "translate-x-0" : ""
+          }`}
+      >
         <div className="px-5 py-5">
-          <span className="text-lg font-bold tracking-tight text-ip-text">
-            Incentive<span className="text-ip-primary">Pay</span>
-          </span>
+          <Logo />
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {visibleItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => setTab(item.id)}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+              onClick={() => selectTab(item.id)}
+              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ip-primary/40 ${
                 tab === item.id
                   ? "bg-ip-primary-light text-ip-primary"
                   : "text-ip-text-muted hover:bg-slate-100 hover:text-ip-text"
@@ -94,7 +115,7 @@ export default function App() {
             <span className="truncate text-sm font-medium text-ip-text">{currentUsername()}</span>
             <button
               onClick={() => keycloak.logout()}
-              className="text-xs font-semibold text-ip-text-muted hover:text-ip-danger"
+              className="rounded text-xs font-semibold text-ip-text-muted hover:text-ip-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ip-danger/40"
             >
               Log out
             </button>
@@ -102,15 +123,31 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="mx-auto max-w-5xl">
-          {tab === "approvals" && <ApprovalsPanel />}
-          {tab === "import" && <ImportPanel />}
-          {tab === "rules" && <RulesPanel />}
-          {tab === "ledger" && <LedgerPanel />}
-          {tab === "pending" && isAdmin && <PendingApprovalsPanel />}
-        </div>
-      </main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-ip-border bg-ip-surface px-4 py-3 md:hidden">
+          <button
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+            className="rounded-lg p-1.5 text-ip-text hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ip-primary/40"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <Logo size={24} />
+        </header>
+
+        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
+          <div className="mx-auto max-w-5xl">
+            {tab === "approvals" && <ApprovalsPanel />}
+            {tab === "import" && <ImportPanel />}
+            {tab === "rules" && <RulesPanel />}
+            {tab === "ledger" && <LedgerPanel />}
+            {tab === "pending" && isAdmin && <PendingApprovalsPanel />}
+            {tab === "how" && <HowItWorks />}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

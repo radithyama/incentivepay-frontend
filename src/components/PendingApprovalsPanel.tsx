@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { api, ApiError } from "../api";
+import { api, friendlyErrorMessage } from "../api";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Select } from "../ui/Field";
 import { ErrorAlert, EmptyState } from "../ui/Alert";
+import { useToast } from "../ui/Toast";
 import { ALL_ROLES, type PendingRegistration, type Role } from "../types";
 
 export function PendingApprovalsPanel() {
@@ -12,6 +13,7 @@ export function PendingApprovalsPanel() {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<Record<string, Role>>({});
+  const toast = useToast();
 
   async function load() {
     setLoading(true);
@@ -27,7 +29,7 @@ export function PendingApprovalsPanel() {
         return next;
       });
     } catch (e) {
-      setError(e instanceof ApiError ? `${e.status}: ${e.message}` : "Failed to load pending registrations");
+      setError(friendlyErrorMessage(e, "Failed to load pending registrations."));
     } finally {
       setLoading(false);
     }
@@ -39,12 +41,12 @@ export function PendingApprovalsPanel() {
 
   async function approve(id: string) {
     setBusyId(id);
-    setError(null);
     try {
       await api.post(`/v1/admin/pending-registrations/${id}/approve`, { role: selectedRole[id] ?? "viewer" });
+      toast.success("Account approved.");
       await load();
     } catch (e) {
-      setError(e instanceof ApiError ? `${e.status}: ${e.message}` : "Approve failed");
+      toast.error(friendlyErrorMessage(e, "Couldn't approve that account."));
     } finally {
       setBusyId(null);
     }
@@ -52,12 +54,12 @@ export function PendingApprovalsPanel() {
 
   async function reject(id: string) {
     setBusyId(id);
-    setError(null);
     try {
       await api.delete(`/v1/admin/pending-registrations/${id}`);
+      toast.success("Registration rejected.");
       await load();
     } catch (e) {
-      setError(e instanceof ApiError ? `${e.status}: ${e.message}` : "Reject failed");
+      toast.error(friendlyErrorMessage(e, "Couldn't reject that registration."));
     } finally {
       setBusyId(null);
     }

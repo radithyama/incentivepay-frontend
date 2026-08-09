@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { ApiError, publicApi } from "../api";
+import { friendlyErrorMessage, publicApi } from "../api";
 import { Button } from "../ui/Button";
 import { Field, Input, Select } from "../ui/Field";
 import { ErrorAlert } from "../ui/Alert";
+import { useToast } from "../ui/Toast";
 import { ALL_ROLES, type Role } from "../types";
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -21,6 +22,7 @@ export function RegisterForm({ onBackToLogin }: { onBackToLogin: () => void }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const toast = useToast();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -29,8 +31,9 @@ export function RegisterForm({ onBackToLogin }: { onBackToLogin: () => void }) {
     try {
       await publicApi.post("/v1/auth/register", { username, email, displayName, password, requestedRole });
       setSubmitted(true);
+      toast.success("Account request submitted.");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Registration failed - please try again.");
+      setError(friendlyErrorMessage(err, "Registration failed - please try again."));
     } finally {
       setSubmitting(false);
     }
