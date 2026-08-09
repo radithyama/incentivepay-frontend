@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { friendlyErrorMessage, publicApi } from "../api";
 import { Button } from "../ui/Button";
 import { Field, Input, Select } from "../ui/Field";
@@ -7,10 +8,11 @@ import { useToast } from "../ui/Toast";
 import { ALL_ROLES, type Role } from "../types";
 
 const ROLE_LABELS: Record<Role, string> = {
-  "incentive-admin": "Incentive Admin - manage rules & participants",
+  "incentive-admin": "Incentive Admin - manage rules, participants & imports",
   approver: "Approver - approve/reject disbursements",
   "finance-ops": "Finance Ops - view the ledger",
   viewer: "Viewer - read-only",
+  "user-admin": "User Admin - approve new account requests",
 };
 
 export function RegisterForm({ onBackToLogin }: { onBackToLogin: () => void }) {
@@ -43,12 +45,12 @@ export function RegisterForm({ onBackToLogin }: { onBackToLogin: () => void }) {
     return (
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-ip-success-light text-ip-success">
-          ✓
+          <CheckCircle2 className="h-6 w-6" />
         </div>
         <h2 className="text-lg font-semibold text-ip-text">Request submitted</h2>
         <p className="mt-2 text-sm text-ip-text-muted">
-          An <span className="font-medium">incentive-admin</span> needs to approve your account before you can log
-          in. Check back once you've heard from them.
+          A <span className="font-medium">user-admin</span> needs to approve your account before you can log in.
+          Check back once you've heard from them.
         </p>
         <Button variant="secondary" className="mt-6 w-full" onClick={onBackToLogin}>
           Back to login

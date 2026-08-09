@@ -150,32 +150,53 @@ export function RulesPanel() {
       ) : rules.length === 0 ? (
         <EmptyState message="No rules yet." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-ip-border bg-ip-surface">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-ip-border text-left text-xs font-semibold uppercase tracking-wide text-ip-text-muted">
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Applies to</th>
-                <th className="px-4 py-3">Effective from</th>
-                <th className="px-4 py-3">Active</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rules.map((r) => (
-                <tr key={r.id} className="border-b border-ip-border last:border-0 hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-ip-text">{r.name}</td>
-                  <td className="px-4 py-3">{r.type}</td>
-                  <td className="px-4 py-3">{r.appliesTo}</td>
-                  <td className="px-4 py-3 text-ip-text-muted">{r.effectiveFrom}</td>
-                  <td className="px-4 py-3">
-                    <Badge tone={r.active ? "success" : "neutral"}>{r.active ? "active" : "inactive"}</Badge>
-                  </td>
+        <>
+          <div className="flex flex-col gap-3 md:hidden">
+            {rules.map((r) => (
+              <div key={r.id} className="rounded-xl border border-ip-border bg-ip-surface p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-medium text-ip-text">{r.name}</span>
+                  <Badge tone={r.active ? "success" : "neutral"}>{r.active ? "active" : "inactive"}</Badge>
+                </div>
+                <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+                  <dt className="text-ip-text-muted">Type</dt>
+                  <dd className="text-ip-text">{r.type}</dd>
+                  <dt className="text-ip-text-muted">Applies to</dt>
+                  <dd className="text-ip-text">{r.appliesTo}</dd>
+                  <dt className="text-ip-text-muted">Effective from</dt>
+                  <dd className="text-ip-text">{r.effectiveFrom}</dd>
+                </dl>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-xl border border-ip-border bg-ip-surface md:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-ip-border text-left text-xs font-semibold uppercase tracking-wide text-ip-text-muted">
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Applies to</th>
+                  <th className="px-4 py-3">Effective from</th>
+                  <th className="px-4 py-3">Active</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rules.map((r) => (
+                  <tr key={r.id} className="border-b border-ip-border last:border-0 hover:bg-slate-50">
+                    <td className="px-4 py-3 font-medium text-ip-text">{r.name}</td>
+                    <td className="px-4 py-3">{r.type}</td>
+                    <td className="px-4 py-3">{r.appliesTo}</td>
+                    <td className="px-4 py-3 text-ip-text-muted">{r.effectiveFrom}</td>
+                    <td className="px-4 py-3">
+                      <Badge tone={r.active ? "success" : "neutral"}>{r.active ? "active" : "inactive"}</Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

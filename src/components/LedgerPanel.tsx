@@ -59,30 +59,47 @@ export function LedgerPanel() {
           {ledger.entries.length === 0 ? (
             <EmptyState message="No disbursements recorded yet." />
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-ip-border">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-ip-border text-left text-xs font-semibold uppercase tracking-wide text-ip-text-muted">
-                    <th className="px-3 py-2">Disbursement</th>
-                    <th className="px-3 py-2">Amount</th>
-                    <th className="px-3 py-2">Disbursed at</th>
-                    <th className="px-3 py-2">Confirmation</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ledger.entries.map((entry) => (
-                    <tr key={entry.id} className="border-b border-ip-border last:border-0">
-                      <td className="px-3 py-2 font-mono text-xs">{entry.disbursementId}</td>
-                      <td className="px-3 py-2 font-medium text-ip-text">
+            <>
+              <div className="flex flex-col gap-2 md:hidden">
+                {ledger.entries.map((entry) => (
+                  <div key={entry.id} className="rounded-lg border border-ip-border p-3">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-medium text-ip-text">
                         {entry.amount} {entry.currency}
-                      </td>
-                      <td className="px-3 py-2 text-ip-text-muted">{new Date(entry.disbursedAt).toLocaleString()}</td>
-                      <td className="px-3 py-2 text-ip-text-muted">{entry.paymentRailConfirmationId ?? "-"}</td>
+                      </span>
+                      <span className="text-xs text-ip-text-muted">{new Date(entry.disbursedAt).toLocaleString()}</span>
+                    </div>
+                    <p className="mt-1 truncate font-mono text-xs text-ip-text-muted">{entry.disbursementId}</p>
+                    <p className="mt-1 text-xs text-ip-text-muted">Confirmation: {entry.paymentRailConfirmationId ?? "-"}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto rounded-lg border border-ip-border md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-ip-border text-left text-xs font-semibold uppercase tracking-wide text-ip-text-muted">
+                      <th className="px-3 py-2">Disbursement</th>
+                      <th className="px-3 py-2">Amount</th>
+                      <th className="px-3 py-2">Disbursed at</th>
+                      <th className="px-3 py-2">Confirmation</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {ledger.entries.map((entry) => (
+                      <tr key={entry.id} className="border-b border-ip-border last:border-0">
+                        <td className="px-3 py-2 font-mono text-xs">{entry.disbursementId}</td>
+                        <td className="px-3 py-2 font-medium text-ip-text">
+                          {entry.amount} {entry.currency}
+                        </td>
+                        <td className="px-3 py-2 text-ip-text-muted">{new Date(entry.disbursedAt).toLocaleString()}</td>
+                        <td className="px-3 py-2 text-ip-text-muted">{entry.paymentRailConfirmationId ?? "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </Card>
       )}

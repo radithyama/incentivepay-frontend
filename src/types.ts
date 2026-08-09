@@ -3,9 +3,9 @@ export type AppliesTo = "EMPLOYEE" | "PARTNER" | "BOTH";
 export type ParticipantType = "EMPLOYEE" | "PARTNER";
 export type DisbursementStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "DISBURSED" | "FAILED";
 export type ImportRowOutcome = "IMPORTED" | "SKIPPED_DUPLICATE" | "FAILED";
-export type Role = "incentive-admin" | "approver" | "finance-ops" | "viewer";
+export type Role = "incentive-admin" | "approver" | "finance-ops" | "viewer" | "user-admin";
 
-export const ALL_ROLES: Role[] = ["incentive-admin", "approver", "finance-ops", "viewer"];
+export const ALL_ROLES: Role[] = ["incentive-admin", "approver", "finance-ops", "viewer", "user-admin"];
 
 export interface PendingRegistration {
   id: string;

@@ -16,7 +16,7 @@ const ROLES: RoleInfo[] = [
     canDo: [
       "Create and manage incentive rules (flat, percentage, tiered)",
       "Bulk-import incentive events via CSV",
-      "Approve or reject new account requests, assigning their role",
+      "No access to account provisioning - that's User Admin's job, kept separate on purpose",
     ],
   },
   {
@@ -47,6 +47,16 @@ const ROLES: RoleInfo[] = [
       "See buttons for admin/approver actions, but the server rejects them - a live look at how the RBAC is enforced",
     ],
   },
+  {
+    role: "User Admin",
+    tagline: "Grants system access - nothing else",
+    tone: "primary",
+    canDo: [
+      "Review and approve or reject new account requests",
+      "Assign the role a new account gets",
+      "No access to rules, participants, events, or the ledger - separated from incentive-admin on purpose, so the person who can create accounts can't also shape payouts",
+    ],
+  },
 ];
 
 export function HowItWorks() {
@@ -55,7 +65,7 @@ export function HowItWorks() {
       <div>
         <h1 className="text-xl font-semibold text-ip-text">How IncentivePay works</h1>
         <p className="mt-1 text-sm text-ip-text-muted">
-          Four roles share one dashboard. What you can click on depends on who you're signed in as - and every
+          Five roles share one dashboard. What you can click on depends on who you're signed in as - and every
           action is re-checked on the server, not just hidden in the UI.
         </p>
       </div>
@@ -94,8 +104,8 @@ export function HowItWorks() {
       <Card className="flex flex-col gap-2">
         <h2 className="font-semibold text-ip-text">Getting an account</h2>
         <p className="text-sm text-ip-text-muted">
-          New accounts start disabled. Submit a request with the role you need from the login screen, and an
-          Incentive Admin approves it (and can adjust the role) before you can sign in.
+          New accounts start disabled. Submit a request with the role you need from the login screen, and a
+          User Admin approves it (and can adjust the role) before you can sign in.
         </p>
       </Card>
     </div>
